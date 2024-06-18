@@ -2,7 +2,7 @@ package com.github.ahauschulte.jtco;
 
 import com.github.ahauschulte.jtco.TailCall.TailCallStep;
 
-final class TailCallTerminalStep<T> extends TailCallStep<T> {
+final class TailCallTerminalStep<T> implements TailCallStep<T> {
     private final T result;
 
     TailCallTerminalStep(final T result) {
@@ -10,17 +10,7 @@ final class TailCallTerminalStep<T> extends TailCallStep<T> {
     }
 
     @Override
-    public T getResult() {
+    public T evaluate() {
         return result;
-    }
-
-    @Override
-    TailCallStep<T> proceed() {
-        return this;
-    }
-
-    @Override
-    boolean isTerminalStep() {
-        return true;
     }
 }

@@ -1,5 +1,6 @@
 package com.github.ahauschulte.jtco;
 
+import com.github.ahauschulte.jtco.TailCall.TailCallStep;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,7 +12,7 @@ class FactorialTest {
         assertThat(factorial(3)).isEqualTo(6);
     }
 
-    private static TailCall.TailCallStep<Integer> factorial(final int n, final Integer acc) {
+    private static TailCallStep<Integer> factorial(final int n, final Integer acc) {
         if (n == 0) {
             return TailCall.terminateWith(acc);
         } else {
@@ -20,7 +21,7 @@ class FactorialTest {
     }
 
     private static int factorial(final int n) {
-        return factorial(n, 1).getResult();
+        return factorial(n, 1).evaluate();
     }
 
 }

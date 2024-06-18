@@ -8,7 +8,7 @@ class TailCallTest {
 
     @Test
     void testTailCallTerminationStep() {
-        assertThat(TailCall.terminateWith(42).getResult()).isEqualTo(42);
+        assertThat(TailCall.terminateWith(42).evaluate()).isEqualTo(42);
     }
 
     @Test
@@ -22,7 +22,7 @@ class TailCallTest {
         assertThat(TailCall.continueWith(() ->
                         TailCall.continueWith(() ->
                                 TailCall.terminateWith(42)))
-                .getResult())
+                .evaluate())
                 .isEqualTo(42);
     }
 
@@ -35,7 +35,7 @@ class TailCallTest {
                         }));
         
         assertThatExceptionOfType(IllegalStateException.class)
-                .isThrownBy(recursionChain::getResult);
+                .isThrownBy(recursionChain::evaluate);
     }
 
 }
