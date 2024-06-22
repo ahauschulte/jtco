@@ -33,7 +33,7 @@ class TailCallTest {
                         TailCall.continueWith(() -> {
                             throw new IllegalStateException();
                         }));
-        
+
         assertThatExceptionOfType(IllegalStateException.class)
                 .isThrownBy(recursionChain::evaluate);
     }
