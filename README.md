@@ -105,6 +105,27 @@ requires wrapping recursive calls in lambda expressions and repeatedly invoking 
 complexity and can result in slower performance compared to native TCO. True TCO is inherently more efficient, as it
 optimises at the compiler level without the need for such manual intervention.
 
+## Synchronous Method Interweaving
+
+The jtco library offers a straightforward way to implement synchronous method interweaving. This technique coordinates
+the execution of multiple recursive methods so that they advance incrementally together, rather than allowing one method
+to complete entirely before starting the next. This ensures balanced progression among tasks, which is essential in
+scenarios demanding fairness and balanced resource usage.
+
+### Key Characteristics of Synchronous Method Interweaving
+
+1. Step-by-Step Advancement: Each recursive method progresses one step at a time in a coordinated fashion.
+2. Fair Resource Usage: Ensures that all tasks are given equal opportunity to make progress, avoiding scenarios where
+   one task monopolizes the resources.
+3. Avoiding Stack Overflow: By using TCO, synchronous method interweaving helps prevent stack overflow errors,
+   even with deep recursion.
+
+While jtco’s approach to synchronous method interweaving is suitable for many scenarios, there may be instances where
+its API lacks the necessary flexibility. There is an inherent tension between providing maximal flexibility and jtco’s
+design goals of maintaining a structured, simple, and robust API. In situations where jtco’s capabilities prove too
+restrictive, it is advisable to employ a tailored implementation of the trampoline pattern to achieve the desired
+flexibility and control.
+
 ## Examples
 
 ### Factorial
@@ -218,6 +239,100 @@ public class Fibonacci {
     }
 }
 ```
+
+### Synchronous Method Interweaving
+
+A somewhat contrived example of how to employ synchronous method interweaving.
+
+```java
+import com.github.ahauschulte.jtco.TailCall;
+import java.math.BigInteger;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.List;
+
+/**
+ * Synchronous method interweaving demo
+ *
+ * <p>This class interweaves the computation of factorial and Fibonacci numbers, combining their results step-by-step.
+ */
+public class Interweaving {
+    private record CombinedResult(BigInteger factorial, BigInteger fibonacci) {
+    }
+
+    private static final Deque<BigInteger> INDIVIDUAL_RESULT_STACK = new ArrayDeque<>();
+    private static final Deque<CombinedResult> COMBINED_RESULT_STACK = new ArrayDeque<>();
+
+    /**
+     * Computes the factorial of a number using tail-recursive calls.
+     *
+     * @param n       the number to compute the factorial for
+     * @param i       the current step in the recursion
+     * @param prevAcc the accumulator holding the intermediate result
+     * @return a {@link TailCall} representing the next step in the tail call chain
+     */
+    private static TailCall<BigInteger> factorial(final int n, final int i, final BigInteger prevAcc) {
+        INDIVIDUAL_RESULT_STACK.push(prevAcc);
+        if (i > n) {
+            return TailCall.terminateWith(prevAcc);
+        } else {
+            final BigInteger nextAcc = BigInteger.valueOf(i).multiply(prevAcc);
+            return TailCall.continueWith(() -> factorial(n, i + 1, nextAcc));
+        }
+    }
+
+    /**
+     * Computes the Fibonacci number at a given position using tail-recursive calls.
+     *
+     * @param n the position in the Fibonacci sequence
+     * @param a the Fibonacci number at position n-1
+     * @param b the Fibonacci number at position n
+     * @return a {@link TailCall} representing the next step in the tail call chain
+     */
+    private static TailCall<BigInteger> fibonacci(final long n, final BigInteger a, final BigInteger b) {
+        INDIVIDUAL_RESULT_STACK.push(a);
+        if (n == 0) {
+            return TailCall.terminateWith(a);
+        } else {
+            return TailCall.continueWith(() -> fibonacci(n - 1, b, a.add(b)));
+        }
+    }
+
+    /**
+     * Combines the results of the factorial and Fibonacci computations.
+     *
+     * @return a {@link TailCall} representing the next step in the tail call chain
+     */
+    private static TailCall<Void> combineFactorialAndFibonacci() {
+        if (INDIVIDUAL_RESULT_STACK.isEmpty()) {
+            return TailCall.terminateWith(null);
+        } else {
+            final BigInteger factorial = INDIVIDUAL_RESULT_STACK.pollLast();
+            final BigInteger fibonacci = INDIVIDUAL_RESULT_STACK.pollLast();
+            COMBINED_RESULT_STACK.push(new CombinedResult(factorial, fibonacci));
+            return TailCall.continueWith(Interweaving::combineFactorialAndFibonacci);
+        }
+    }
+
+    public static void main(final String[] args) {
+        TailCall.interweave(List.of(
+                () -> factorial(9, 1, BigInteger.ONE),
+                () -> fibonacci(15, BigInteger.ZERO, BigInteger.ONE),
+                Interweaving::combineFactorialAndFibonacci
+        ));
+        COMBINED_RESULT_STACK.reversed().forEach(System.out::println);
+    }
+}
+```
+
+## Motivation
+
+I created this project to learn about the trampoline pattern and its application as a substitute for Java's lack of
+tail call optimisation. Developing the little jtco library has been quite a fun learning experience, showing me how to
+elegantly compensate for Java's limitations in this area.
+
+I also had great fun having conversations with ChatGPT, which I extensively used for creating this documentation and
+the JavaDoc for the library.
 
 ## AI Tools Used
 

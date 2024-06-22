@@ -1,6 +1,10 @@
 package com.github.ahauschulte.jtco;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * A representation of a tail call, facilitating tail call optimization by enabling iterative evaluation.
@@ -39,12 +43,13 @@ import java.util.function.Supplier;
 public sealed interface TailCall<T> permits TailCallContinuationStep, TailCallTerminalStep {
 
     /**
-     * Evaluates this tail call and all subsequent calls within the call chain
+     * Evaluates this {@link TailCall} and all subsequent calls within the call chain
      *
      * <p>If a {@link RuntimeException} is raised during the evaluation of the tail call, this method will propagate
      * that exact {@code RuntimeException}.
      *
      * @return the result of the tail call
+     * @throws NullPointerException if a {@code TailCall} in the tail call chain is {@code null}
      */
     T evaluate();
 
@@ -69,9 +74,34 @@ public sealed interface TailCall<T> permits TailCallContinuationStep, TailCallTe
      * @param nextTailCallSupplier a {@link Supplier} of the next step in the tail call chain
      * @param <T>                  the type of the tail call chain's result
      * @return the next step in the tail call chain
-     * @throws NullPointerException if {@code nextTailCallSupplier} is null
+     * @throws NullPointerException if {@code nextTailCallSupplier} is {@code null}
      */
     static <T> TailCall<T> continueWith(final Supplier<TailCall<T>> nextTailCallSupplier) {
         return new TailCallContinuationStep<>(nextTailCallSupplier);
+    }
+
+    /**
+     * Interweaves tail call, iteratively advancing each tail call together.
+     *
+     * <p>This method processes a list of suppliers that produce tail calls, advancing them in unison. It repeatedly
+     * checks if all tail calls in the list can continue and, if so, advances each tail call to its next step. This
+     * process ensures that each step of the computation progresses together with the others, rather than one tail
+     * call fully completing before the next starts. The iteration stops when at least one tail call cannot proceed
+     * further.
+     *
+     * @param tailCallSuppliers a list of {@link Supplier} objects that provide {@link TailCall} instances.
+     * @throws NullPointerException if {@code tailCallSuppliers} is {@code null} or any of its elements
+     */
+    static void interweave(final List<Supplier<TailCall<?>>> tailCallSuppliers) {
+        Objects.requireNonNull(tailCallSuppliers, "tailCallSuppliers must not be null");
+        if (tailCallSuppliers.isEmpty()) return;
+
+        final List<TailCall<?>> tailCallList = tailCallSuppliers.stream()
+                .map(Supplier::get)
+                .collect(Collectors.toCollection(() -> new ArrayList<>(tailCallSuppliers.size())));
+
+        while (tailCallList.stream().allMatch(tailCall -> tailCall instanceof TailCallContinuationStep<?>)) {
+            tailCallList.replaceAll(tailCall -> ((TailCallContinuationStep<?>) tailCall).proceed());
+        }
     }
 }
