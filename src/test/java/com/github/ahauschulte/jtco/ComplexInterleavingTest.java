@@ -9,7 +9,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ComplexInterweavingTest {
+class ComplexInterleavingTest {
     private record CombinedResult(BigInteger factorial, BigInteger fibonacci) {
     }
 
@@ -47,8 +47,8 @@ class ComplexInterweavingTest {
     }
 
     @Test
-    void testInterweavingStartingWithContinuationSteps() {
-        TailCall.interweave(List.of(
+    void testInterleavingStartingWithContinuationSteps() {
+        TailCall.interleave(List.of(
                 () -> factorial(9, 1, BigInteger.ONE),
                 () -> fibonacci(15, BigInteger.ZERO, BigInteger.ONE),
                 this::combineFactorialAndFibonacci
@@ -71,8 +71,8 @@ class ComplexInterweavingTest {
     }
 
     @Test
-    void testInterweavingStartingWithTerminalStep() {
-        TailCall.interweave(List.of(
+    void testInterleavingStartingWithTerminalStep() {
+        TailCall.interleave(List.of(
                 () -> factorial(0, 1, BigInteger.ONE),
                 () -> fibonacci(15, BigInteger.ZERO, BigInteger.ONE),
                 this::combineFactorialAndFibonacci

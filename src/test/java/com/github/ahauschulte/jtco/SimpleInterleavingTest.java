@@ -8,35 +8,35 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.*;
 
-class SimpleInterweavingTest {
+class SimpleInterleavingTest {
 
     @Test
-    void testInterweavingForInvalidArguments() {
+    void testInterleavingForInvalidArguments() {
         assertThatNullPointerException()
-                .isThrownBy(() -> TailCall.interweave(null));
+                .isThrownBy(() -> TailCall.interleave(null));
 
         assertThatNullPointerException()
-                .isThrownBy(() -> TailCall.interweave(List.of(
+                .isThrownBy(() -> TailCall.interleave(List.of(
                         () -> TailCall.terminateWith(42),
                         null)));
     }
 
     @Test
-    void testInterweavingEmptySupplierList() {
+    void testInterleavingEmptySupplierList() {
         assertThatNoException()
-                .isThrownBy(() -> TailCall.interweave(Collections.emptyList()));
+                .isThrownBy(() -> TailCall.interleave(Collections.emptyList()));
     }
 
     @Test
-    void testInterweavingForSupplierEvaluatingToNull() {
+    void testInterleavingForSupplierEvaluatingToNull() {
         assertThatNoException()
-                .isThrownBy(() -> TailCall.interweave(List.of(() -> null)));
+                .isThrownBy(() -> TailCall.interleave(List.of(() -> null)));
     }
 
     @Test
-    void testInterweavingForTerminalStep() {
+    void testInterleavingForTerminalStep() {
         final AtomicBoolean called = new AtomicBoolean();
-        TailCall.interweave(List.of(
+        TailCall.interleave(List.of(
                 () -> TailCall.terminateWith(42),
                 () -> TailCall.continueWith(() -> {
                     called.set(true);

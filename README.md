@@ -105,22 +105,22 @@ requires wrapping recursive calls in lambda expressions and repeatedly invoking 
 complexity and can result in slower performance compared to native TCO. True TCO is inherently more efficient, as it
 optimises at the compiler level without the need for such manual intervention.
 
-## Synchronous Method Interweaving
+## Synchronous Method Interleaving
 
-The jtco library offers a straightforward way to implement synchronous method interweaving. This technique coordinates
+The jtco library offers a straightforward way to implement synchronous method interleaving. This technique coordinates
 the execution of multiple recursive methods so that they advance incrementally together, rather than allowing one method
 to complete entirely before starting the next. This ensures balanced progression among tasks, which is essential in
 scenarios demanding fairness and balanced resource usage.
 
-### Key Characteristics of Synchronous Method Interweaving
+### Key Characteristics of Synchronous Method Interleaving
 
 1. Step-by-Step Advancement: Each recursive method progresses one step at a time in a coordinated fashion.
 2. Fair Resource Usage: Ensures that all tasks are given equal opportunity to make progress, avoiding scenarios where
    one task monopolizes the resources.
-3. Avoiding Stack Overflow: By using TCO, synchronous method interweaving helps prevent stack overflow errors,
+3. Avoiding Stack Overflow: By using TCO, synchronous method interleaving helps prevent stack overflow errors,
    even with deep recursion.
 
-While jtco’s approach to synchronous method interweaving is suitable for many scenarios, there may be instances where
+While jtco’s approach to synchronous method interleaving is suitable for many scenarios, there may be instances where
 its API lacks the necessary flexibility. There is an inherent tension between providing maximal flexibility and jtco’s
 design goals of maintaining a structured, simple, and robust API. In situations where jtco’s capabilities prove too
 restrictive, it is advisable to employ a tailored implementation of the trampoline pattern to achieve the desired
@@ -240,9 +240,9 @@ public class Fibonacci {
 }
 ```
 
-### Synchronous Method Interweaving
+### Synchronous Method Interleaving
 
-A somewhat contrived example of how to employ synchronous method interweaving.
+A somewhat contrived example of how to employ synchronous method interleaving.
 
 ```java
 import com.github.ahauschulte.jtco.TailCall;
@@ -252,11 +252,11 @@ import java.util.Deque;
 import java.util.List;
 
 /**
- * Synchronous method interweaving demo
+ * Synchronous method interleaving demo
  *
- * <p>This class interweaves the computation of factorial and Fibonacci numbers, combining their results step-by-step.
+ * <p>This class interleaves the computation of factorial and Fibonacci numbers, combining their results step-by-step.
  */
-public class Interweaving {
+public class Interleaving {
     private record CombinedResult(BigInteger factorial, BigInteger fibonacci) {
     }
 
@@ -310,15 +310,15 @@ public class Interweaving {
             final BigInteger factorial = INDIVIDUAL_RESULT_STACK.pollLast();
             final BigInteger fibonacci = INDIVIDUAL_RESULT_STACK.pollLast();
             COMBINED_RESULT_STACK.push(new CombinedResult(factorial, fibonacci));
-            return TailCall.continueWith(Interweaving::combineFactorialAndFibonacci);
+            return TailCall.continueWith(Interleaving::combineFactorialAndFibonacci);
         }
     }
 
     public static void main(final String[] args) {
-        TailCall.interweave(List.of(
+        TailCall.interleave(List.of(
                 () -> factorial(9, 1, BigInteger.ONE),
                 () -> fibonacci(15, BigInteger.ZERO, BigInteger.ONE),
-                Interweaving::combineFactorialAndFibonacci
+                Interleaving::combineFactorialAndFibonacci
         ));
         COMBINED_RESULT_STACK.reversed().forEach(System.out::println);
     }

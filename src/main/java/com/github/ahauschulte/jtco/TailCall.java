@@ -77,7 +77,7 @@ public sealed interface TailCall<T> permits TailCallContinuationStep, TailCallTe
     }
 
     /**
-     * Interweaves tail calls, iteratively advancing all supplied tail calls together.
+     * Interleaves tail calls, iteratively advancing all supplied tail calls together.
      *
      * <p>This method processes a list of suppliers that produce tail calls, advancing them in unison. It repeatedly
      * checks if all tail calls in the list can continue and, if so, advances each tail call to its next step. This
@@ -88,7 +88,7 @@ public sealed interface TailCall<T> permits TailCallContinuationStep, TailCallTe
      * @param tailCallSuppliers a list of {@link Supplier} objects that provide {@link TailCall} instances
      * @throws NullPointerException if {@code tailCallSuppliers} is {@code null} or any of its elements
      */
-    static void interweave(final List<Supplier<TailCall<?>>> tailCallSuppliers) {
+    static void interleave(final List<Supplier<TailCall<?>>> tailCallSuppliers) {
         Objects.requireNonNull(tailCallSuppliers, "tailCallSuppliers must not be null");
         if (tailCallSuppliers.isEmpty()) return;
 
