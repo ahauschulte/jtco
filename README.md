@@ -89,12 +89,12 @@ enhancing readability. Lambdas allow for concise and expressive function definit
 the recursive steps as a functional interface. This reduces boilerplate code and improves the overall clarity and
 maintainability of the trampoline implementation.
 
-The jtco (Java Tail Call Optimisation) library addresses the lack of native TCO in Java by offering an implementation of
-the trampoline pattern. It provides means that enables tail-recursive methods to be executed without increasing the call
-stack size, effectively preventing stack overflow errors. The API is designed with structure and simplicity in mind,
-promoting the creation of clean, readable, and maintainable client code. By utilising lambdas and functional
-programming constructs, jtco simplifies the creation of efficient and elegant recursive algorithms, allowing developers
-to leverage tail call optimisation techniques within the Java ecosystem.
+The jtco library addresses the lack of native TCO in Java by offering an implementation of the trampoline pattern. It
+provides means that enables tail-recursive methods to be executed without increasing the call stack size, effectively
+preventing stack overflow errors. The API is designed with structure and simplicity in mind, promoting the creation of
+clean, readable, and maintainable client code. By utilising lambdas and functional programming constructs, jtco
+simplifies the creation of efficient and elegant recursive algorithms, allowing developers to leverage tail call
+optimisation techniques within the Java ecosystem.
 
 While jtco brings a touch of tail call optimisation to Java, it is essential to understand the distinction between true
 TCO and the trampoline pattern. True TCO is a compiler-level optimisation that reuses the current method’s stack frame
