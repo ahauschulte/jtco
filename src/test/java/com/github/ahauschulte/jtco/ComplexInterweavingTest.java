@@ -13,11 +13,11 @@ class ComplexInterweavingTest {
     private record CombinedResult(BigInteger factorial, BigInteger fibonacci) {
     }
 
-    private static final Deque<BigInteger> INDIVIDUAL_RESULT_STACK = new ArrayDeque<>();
-    private static final Deque<CombinedResult> COMBINED_RESULT_STACK = new ArrayDeque<>();
+    private final Deque<BigInteger> individualResultStack = new ArrayDeque<>();
+    private final Deque<CombinedResult> combinedResultStack = new ArrayDeque<>();
 
-    private static TailCall<BigInteger> factorial(final int n, final int i, final BigInteger prevAcc) {
-        INDIVIDUAL_RESULT_STACK.push(prevAcc);
+    private TailCall<BigInteger> factorial(final int n, final int i, final BigInteger prevAcc) {
+        individualResultStack.push(prevAcc);
         if (i > n) {
             return TailCall.terminateWith(prevAcc);
         } else {
@@ -26,8 +26,8 @@ class ComplexInterweavingTest {
         }
     }
 
-    private static TailCall<BigInteger> fibonacci(final long n, final BigInteger a, final BigInteger b) {
-        INDIVIDUAL_RESULT_STACK.push(a);
+    private TailCall<BigInteger> fibonacci(final long n, final BigInteger a, final BigInteger b) {
+        individualResultStack.push(a);
         if (n == 0) {
             return TailCall.terminateWith(a);
         } else {
@@ -35,26 +35,26 @@ class ComplexInterweavingTest {
         }
     }
 
-    private static TailCall<Void> combineFactorialAndFibonacci() {
-        if (INDIVIDUAL_RESULT_STACK.isEmpty()) {
+    private TailCall<Void> combineFactorialAndFibonacci() {
+        if (individualResultStack.size() < 2) {
             return TailCall.terminateWith(null);
         } else {
-            final BigInteger factorial = INDIVIDUAL_RESULT_STACK.pollLast();
-            final BigInteger fibonacci = INDIVIDUAL_RESULT_STACK.pollLast();
-            COMBINED_RESULT_STACK.push(new CombinedResult(factorial, fibonacci));
-            return TailCall.continueWith(ComplexInterweavingTest::combineFactorialAndFibonacci);
+            final BigInteger factorial = individualResultStack.pollLast();
+            final BigInteger fibonacci = individualResultStack.pollLast();
+            combinedResultStack.push(new CombinedResult(factorial, fibonacci));
+            return TailCall.continueWith(this::combineFactorialAndFibonacci);
         }
     }
 
     @Test
-    void testInterweaving() {
+    void testInterweavingStartingWithContinuationSteps() {
         TailCall.interweave(List.of(
                 () -> factorial(9, 1, BigInteger.ONE),
                 () -> fibonacci(15, BigInteger.ZERO, BigInteger.ONE),
-                ComplexInterweavingTest::combineFactorialAndFibonacci
+                this::combineFactorialAndFibonacci
         ));
 
-        assertThat(COMBINED_RESULT_STACK)
+        assertThat(combinedResultStack)
                 .hasSize(10)
                 .containsExactly(
                         new CombinedResult(BigInteger.valueOf(362_880), BigInteger.valueOf(34)),
@@ -66,6 +66,21 @@ class ComplexInterweavingTest {
                         new CombinedResult(BigInteger.valueOf(6), BigInteger.valueOf(2)),
                         new CombinedResult(BigInteger.valueOf(2), BigInteger.ONE),
                         new CombinedResult(BigInteger.ONE, BigInteger.ONE),
+                        new CombinedResult(BigInteger.ONE, BigInteger.ZERO)
+                );
+    }
+
+    @Test
+    void testInterweavingStartingWithTerminalStep() {
+        TailCall.interweave(List.of(
+                () -> factorial(0, 1, BigInteger.ONE),
+                () -> fibonacci(15, BigInteger.ZERO, BigInteger.ONE),
+                this::combineFactorialAndFibonacci
+        ));
+
+        assertThat(combinedResultStack)
+                .hasSize(1)
+                .containsExactly(
                         new CombinedResult(BigInteger.ONE, BigInteger.ZERO)
                 );
     }
