@@ -6,7 +6,7 @@
 
     <groupId>io.github.ahauschulte.jtco</groupId>
     <artifactId>jtco</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 
     <name>jtco</name>
     <description>A tail call optimisation substitute for Java</description>
