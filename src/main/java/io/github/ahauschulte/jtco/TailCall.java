@@ -19,11 +19,11 @@ import java.util.stream.Collectors;
  * import java.math.BigInteger;
  *
  * public class Factorial {
- *     private static TailCall<BigInteger> factorial(final int n, final Integer prevAcc) { // @highlight substring="TailCall"
+ *     private static TailCall<BigInteger> factorial(final int n, final BigInteger prevAcc) { // @highlight substring="TailCall"
  *         if (n == 0) {
  *             return TailCall.terminateWith(prevAcc); // @highlight substring="TailCall.terminateWith"
  *         } else {
- *             return TailCall.continueWith(() -> factorial(n - 1, n * prevAcc)); // @highlight substring="TailCall.continueWith"
+ *             return TailCall.continueWith(() -> factorial(n - 1, prevAcc.multiply(BigInteger.valueOf(n)))); // @highlight substring="TailCall.continueWith"
  *         }
  *     }
  *
