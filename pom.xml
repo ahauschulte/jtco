@@ -221,7 +221,6 @@
                         <arg>loopback</arg>
                     </gpgArguments>
                     <passphrase>${env.GPG_PASSPHRASE}</passphrase>
-                    <keyname>YOUR-FULL-FINGERPRINT</keyname>
                 </configuration>
             </plugin>
             <plugin>
