@@ -2,9 +2,11 @@ package com.github.ahauschulte.jtco;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -12,13 +14,15 @@ class SimpleInterleavingTest {
 
     @Test
     void testInterleavingForInvalidArguments() {
-        assertThatNullPointerException()
-                .isThrownBy(() -> TailCall.interleave(null));
+        final List<Supplier<TailCall<?>>> tailCallSuppliersWithNullElement = new ArrayList<>();
+        tailCallSuppliersWithNullElement.add(() -> TailCall.terminateWith(42));
+        tailCallSuppliersWithNullElement.add(null);
 
         assertThatNullPointerException()
-                .isThrownBy(() -> TailCall.interleave(List.of(
-                        () -> TailCall.terminateWith(42),
-                        null)));
+                .isThrownBy(() -> TailCall.interleave(tailCallSuppliersWithNullElement));
+
+        assertThatNullPointerException()
+                .isThrownBy(() -> TailCall.interleave(null));
     }
 
     @Test
@@ -29,7 +33,7 @@ class SimpleInterleavingTest {
 
     @Test
     void testInterleavingForSupplierEvaluatingToNull() {
-        assertThatNoException()
+        assertThatNullPointerException()
                 .isThrownBy(() -> TailCall.interleave(List.of(() -> null)));
     }
 
