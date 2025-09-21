@@ -1,4 +1,4 @@
-package com.github.ahauschulte.jtco;
+package io.github.ahauschulte.jtco;
 
 import org.junit.jupiter.api.Test;
 

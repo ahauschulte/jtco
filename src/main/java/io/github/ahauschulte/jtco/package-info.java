@@ -5,7 +5,7 @@
  * recursive algorithms to be executed in an iterative manner, thus avoiding deep call stacks and improving the
  * performance and reliability of recursive methods.
  *
- * <p>The main component of this package is {@link com.github.ahauschulte.jtco.TailCall}: An interface representing a
+ * <p>The main component of this package is {@link io.github.ahauschulte.jtco.TailCall}: An interface representing a
  * tail call that can be evaluated iteratively to avoid deep recursion.
  */
-package com.github.ahauschulte.jtco;
+package io.github.ahauschulte.jtco;

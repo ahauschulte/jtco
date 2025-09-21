@@ -1,4 +1,4 @@
-package com.github.ahauschulte.jtco;
+package io.github.ahauschulte.jtco;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  *
  * <p><b>Example</b>
  * {@snippet lang = "java":
- * import com.github.ahauschulte.jtco.TailCall;
+ * import io.github.ahauschulte.jtco.TailCall;
  * import java.math.BigInteger;
  *
  * public class Factorial {

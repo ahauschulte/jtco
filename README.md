@@ -131,7 +131,8 @@ flexibility and control.
 ### Factorial
 
 ```java
-import com.github.ahauschulte.jtco.TailCall;
+import io.github.ahauschulte.jtco.TailCall;
+
 import java.math.BigInteger;
 
 /**
@@ -143,18 +144,18 @@ import java.math.BigInteger;
  */
 public class Factorial {
 
-   /**
-    * Calculates the factorial of a given number using a tail-recursive approach.
-    *
-    * <p>This method uses the {@link TailCall} interface to create a tail-recursive
-    * implementation of the factorial function. The method continues the tail call
-    * chain until it reaches the base case, at which point it returns the accumulated
-    * result.
-    *
-    * @param n       the number to calculate the factorial for
-    * @param prevAcc the accumulator that holds the intermediate results of the factorial calculation
-    * @return a {@code TailCall} representing the next step in the tail call chain
-    */
+    /**
+     * Calculates the factorial of a given number using a tail-recursive approach.
+     *
+     * <p>This method uses the {@link TailCall} interface to create a tail-recursive
+     * implementation of the factorial function. The method continues the tail call
+     * chain until it reaches the base case, at which point it returns the accumulated
+     * result.
+     *
+     * @param n       the number to calculate the factorial for
+     * @param prevAcc the accumulator that holds the intermediate results of the factorial calculation
+     * @return a {@code TailCall} representing the next step in the tail call chain
+     */
     private static TailCall<BigInteger> factorial(final int n, final BigInteger prevAcc) {
         if (n == 0) {
             return TailCall.terminateWith(prevAcc);
@@ -164,15 +165,15 @@ public class Factorial {
         }
     }
 
-   /**
-    * Initiates the factorial calculation for a given number.
-    *
-    * <p>This method initializes the accumulator to 1 (as a {@code BigInteger})
-    * and starts the tail call chain by calling the {@link #factorial(int, BigInteger)} method.
-    *
-    * @param n the number to calculate the factorial for
-    * @return the factorial of the given number as a {@code BigInteger}
-    */
+    /**
+     * Initiates the factorial calculation for a given number.
+     *
+     * <p>This method initializes the accumulator to 1 (as a {@code BigInteger})
+     * and starts the tail call chain by calling the {@link #factorial(int, BigInteger)} method.
+     *
+     * @param n the number to calculate the factorial for
+     * @return the factorial of the given number as a {@code BigInteger}
+     */
     private static BigInteger factorial(final int n) {
         return factorial(n, BigInteger.ONE).evaluate();
     }
@@ -187,7 +188,8 @@ public class Factorial {
 ### Fibonacci Sequence
 
 ```java
-import com.github.ahauschulte.jtco.TailCall;
+import io.github.ahauschulte.jtco.TailCall;
+
 import java.math.BigInteger;
 
 /**
@@ -199,19 +201,19 @@ import java.math.BigInteger;
  */
 public class Fibonacci {
 
-   /**
-    * Calculates the Fibonacci number for a given position using a tail-recursive approach.
-    *
-    * <p>This method uses the {@link TailCall} interface to create a tail-recursive
-    * implementation of the Fibonacci function. The method continues the tail call
-    * chain until it reaches the base case, at which point it returns the accumulated
-    * result.
-    *
-    * @param n the position in the Fibonacci sequence to calculate
-    * @param a the Fibonacci number at position n-1
-    * @param b the Fibonacci number at position n
-    * @return a {@code TailCall} representing the next step in the tail call chain
-    */
+    /**
+     * Calculates the Fibonacci number for a given position using a tail-recursive approach.
+     *
+     * <p>This method uses the {@link TailCall} interface to create a tail-recursive
+     * implementation of the Fibonacci function. The method continues the tail call
+     * chain until it reaches the base case, at which point it returns the accumulated
+     * result.
+     *
+     * @param n the position in the Fibonacci sequence to calculate
+     * @param a the Fibonacci number at position n-1
+     * @param b the Fibonacci number at position n
+     * @return a {@code TailCall} representing the next step in the tail call chain
+     */
     private static TailCall<BigInteger> fibonacci(final long n, final BigInteger a, final BigInteger b) {
         if (n == 0) {
             return TailCall.terminateWith(a);
@@ -220,20 +222,20 @@ public class Fibonacci {
         }
     }
 
-   /**
-    * Initiates the Fibonacci calculation for a given number.
-    *
-    * <p>This method initialises the first two numbers in the Fibonacci sequence (0 and 1)
-    * and starts the tail call chain.
-    *
-    * @param n the position in the Fibonacci sequence to calculate
-    * @return the Fibonacci number at the given position as a {@code BigInteger}
-    */
-   private static BigInteger fibonacci(final int n) {
-      return fibonacci(n, BigInteger.ZERO, BigInteger.ONE).evaluate();
-   }
-   
-   public static void main(final String[] args) {
+    /**
+     * Initiates the Fibonacci calculation for a given number.
+     *
+     * <p>This method initialises the first two numbers in the Fibonacci sequence (0 and 1)
+     * and starts the tail call chain.
+     *
+     * @param n the position in the Fibonacci sequence to calculate
+     * @return the Fibonacci number at the given position as a {@code BigInteger}
+     */
+    private static BigInteger fibonacci(final int n) {
+        return fibonacci(n, BigInteger.ZERO, BigInteger.ONE).evaluate();
+    }
+
+    public static void main(final String[] args) {
         final int n = 1_000;
         System.out.printf("fibonacci(%d): %d%n", n, fibonacci(n));
     }
@@ -245,7 +247,8 @@ public class Fibonacci {
 A somewhat contrived example of how to employ synchronous method interleaving.
 
 ```java
-import com.github.ahauschulte.jtco.TailCall;
+import io.github.ahauschulte.jtco.TailCall;
+
 import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.Deque;
