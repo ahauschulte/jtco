@@ -86,15 +86,16 @@ public sealed interface TailCall<T> permits TailCallContinuationStep, TailCallTe
      * further because its terminal step has already been reached.
      *
      * @param tailCallSuppliers a list of {@link Supplier} objects that provide {@link TailCall} instances
-     * @throws NullPointerException if {@code tailCallSuppliers} is {@code null}, any of its elements, or if a tail call
-     * supplier returns {@code null}.
+     * @throws NullPointerException if {@code tailCallSuppliers} is {@code null}, any of its elements is {@code null},
+     * or if a tail call supplier returns {@code null}.
      */
     static void interleave(final List<Supplier<TailCall<?>>> tailCallSuppliers) {
         Objects.requireNonNull(tailCallSuppliers, "tailCallSuppliers must not be null");
         if (tailCallSuppliers.isEmpty()) return;
 
         final List<TailCall<?>> tailCallList = tailCallSuppliers.stream()
-                .map(s -> Objects.requireNonNull(s.get(), "Tail call supplier must not return null"))
+                .map(s -> Objects.requireNonNull(s, "Tail call supplier must not return null"))
+                .map(s -> Objects.requireNonNull(s.get(), "Tail call must not be null"))
                 .collect(Collectors.toCollection(() -> new ArrayList<>(tailCallSuppliers.size())));
 
         while (tailCallList.stream().allMatch(tailCall -> tailCall instanceof TailCallContinuationStep<?>)) {

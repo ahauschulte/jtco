@@ -16,7 +16,7 @@ final class TailCallContinuationStep<T> implements TailCall<T> {
         TailCall<T> tailCallStep = this;
         while (tailCallStep instanceof final TailCallContinuationStep<T> tailCallContinuationStep) {
             tailCallStep = Objects.requireNonNull(tailCallContinuationStep.proceed(),
-                    "no tail call in the tail call chain must be null");
+                    "No tail call in the chain must be null");
         }
         return tailCallStep.evaluate();
     }
