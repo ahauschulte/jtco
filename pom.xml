@@ -30,7 +30,7 @@
     <scm>
         <url>https://github.com/ahauschulte/jtco</url>
         <connection>scm:git:https://github.com/ahauschulte/jtco.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com:ahauschulte/jtco.git</developerConnection>
+        <developerConnection>scm:git:git@github.com:ahauschulte/jtco.git</developerConnection>
     </scm>
     
     <issueManagement>
