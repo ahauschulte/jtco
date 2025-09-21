@@ -1,5 +1,9 @@
 # jtco
 
+[![Java CI with Maven](https://github.com/ahauschulte/jtco/actions/workflows/maven.yml/badge.svg)](https://github.com/ahauschulte/jtco/actions/workflows/maven.yml)
+
+## Summary
+
 The jtco (Java Tail Call Optimisation) library provides a substitute for Java’s missing tail call optimisation
 capabilities. It implements a variant of the trampoline pattern to allow tail-recursive methods to execute without
 increasing the call stack size, thereby preventing stack overflow errors. By converting recursive calls into a loop
