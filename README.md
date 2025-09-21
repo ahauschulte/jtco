@@ -8,7 +8,7 @@ The jtco (Java Tail Call Optimisation) library provides a substitute for Java’
 capabilities. It implements a variant of the trampoline pattern to allow tail-recursive methods to execute without
 increasing the call stack size, thereby preventing stack overflow errors. By converting recursive calls into a loop
 that repeatedly invokes methods without adding new stack frames, jtco enables deeply recursive methods to run in
-constant stack space. 
+constant stack space. jtco is implemented in plain Java 21 and has no runtime dependencies.
 
 ## Recursion
 
