@@ -94,7 +94,7 @@ public sealed interface TailCall<T> permits TailCallContinuationStep, TailCallTe
         if (tailCallSuppliers.isEmpty()) return;
 
         final List<TailCall<?>> tailCallList = tailCallSuppliers.stream()
-                .map(s -> Objects.requireNonNull(s, "Tail call supplier must not return null"))
+                .map(s -> Objects.requireNonNull(s, "Tail call supplier must not be null"))
                 .map(s -> Objects.requireNonNull(s.get(), "Tail call must not be null"))
                 .collect(Collectors.toCollection(() -> new ArrayList<>(tailCallSuppliers.size())));
 
