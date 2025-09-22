@@ -47,7 +47,8 @@ dependencies {
 
 ### Build from Source
 
-Building from source is useful if you want to try the latest unreleased changes, work with snapshot versions, or contribute to the project.
+Building from source is useful if you want to try the latest unreleased changes, work with snapshot versions, or
+contribute to the project.
 
 Clone the repository and run:
 
