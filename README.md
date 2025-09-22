@@ -4,7 +4,7 @@
 [![javadoc](https://javadoc.io/badge2/io.github.ahauschulte.jtco/jtco/javadoc.svg)](https://javadoc.io/doc/io.github.ahauschulte.jtco/jtco)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.ahauschulte.jtco/jtco.svg)](https://central.sonatype.com/artifact/io.github.ahauschulte.jtco/jtco)
 
-## Summary
+## Overview
 
 The jtco (Java Tail Call Optimisation) library provides a substitute for Java’s missing tail call optimisation
 capabilities. It implements a variant of the trampoline pattern to allow tail-recursive methods to execute without
@@ -12,7 +12,56 @@ increasing the call stack size, thereby preventing stack overflow errors. By con
 that repeatedly invokes methods without adding new stack frames, jtco enables deeply recursive methods to run in
 constant stack space. jtco is implemented in plain Java 21 and has no runtime dependencies.
 
-## Recursion
+## Getting Started
+
+### Installation
+
+jtco requires **Java 21** and has **no runtime dependencies**. Use the version indicated by the badge at the top of this
+page.
+
+#### Maven
+
+```xml
+<dependency>
+    <groupId>io.github.ahauschulte.jtco</groupId>
+    <artifactId>jtco</artifactId>
+    <version><!-- use the latest release version --></version>
+</dependency>
+```
+
+#### Gradle (Kotlin DSL)
+
+```kotlin
+dependencies {
+    implementation("io.github.ahauschulte.jtco:jtco:<latest-version>")
+}
+```
+
+#### Gradle (Groovy DSL)
+
+```groovy
+dependencies {
+    implementation 'io.github.ahauschulte.jtco:jtco:<latest-version>'
+}
+```
+
+### Build from Source
+
+Building from source is useful if you want to try the latest unreleased changes, work with snapshot versions, or contribute to the project.
+
+Clone the repository and run:
+
+```shell
+git clone https://github.com/ahauschulte/jtco.git
+cd jtco
+mvn clean install
+```
+
+This installs the library to your local Maven repository so it can be referenced with the same coordinates shown above.
+
+## Concepts
+
+### Recursion
 
 A recursive method call is a method that calls itself within its own code. This technique is used to solve
 problems that can be broken down into smaller, similar subproblems. A recursive method typically has a base
@@ -54,7 +103,7 @@ enhancements as their iterative counterparts, potentially leading to slower exec
 
 This is where tail call optimisation becomes beneficial.
 
-## Tail Call Optimisation
+### Tail Call Optimisation
 
 Tail Call Optimisation (TCO) is a sophisticated technique employed in many programming languages to enhance the
 performance of recursive methods. When a method makes a call to another method as its final action, it is termed a
@@ -70,7 +119,7 @@ This optimisation is particularly beneficial for algorithms that rely heavily on
 functional programming paradigms. Without TCO, deep recursion can lead to stack overflow errors, as each call consumes
 stack space.
 
-### Benefits of Tail Call Optimisation
+#### Benefits of Tail Call Optimisation
 
 1. Efficiency: By reusing stack frames, TCO reduces the overhead associated with recursive method calls, leading to
    improved performance and faster execution times.
@@ -82,7 +131,7 @@ stack space.
 4. Memory Management: By maintaining a constant stack size, TCO leads to more predictable memory usage, which is
    crucial in resource-constrained environments, real-time systems, or for safety-critical applications.
 
-## Leveraging Tail Call Optimisation Techniques in Java 
+### Leveraging Tail Call Optimisation Techniques in Java 
 
 Unfortunately, the common JVM implementations do not natively support TCO for various reasons. However, developers can
 employ certain techniques to simulate its benefits. One of those techniques is the so-called trampoline pattern. The
@@ -111,14 +160,14 @@ requires wrapping recursive calls in lambda expressions and repeatedly invoking 
 complexity and can result in slower performance compared to native TCO. True TCO is inherently more efficient, as it
 optimises at the compiler level without the need for such manual intervention.
 
-## Synchronous Method Interleaving
+### Synchronous Method Interleaving
 
 The jtco library offers a straightforward way to implement synchronous method interleaving. This technique coordinates
 the execution of multiple recursive methods so that they advance incrementally together, rather than allowing one method
 to complete entirely before starting the next. This ensures balanced progression among tasks, which is essential in
 scenarios demanding fairness and balanced resource usage.
 
-### Key Characteristics of Synchronous Method Interleaving
+#### Key Characteristics of Synchronous Method Interleaving
 
 1. Step-by-Step Advancement: Each recursive method progresses one step at a time in a coordinated fashion.
 2. Fair Resource Usage: Ensures that all tasks are given equal opportunity to make progress, avoiding scenarios where
@@ -202,7 +251,7 @@ import java.math.BigInteger;
  * Fibonacci demo
  *
  * <p>This example shows how to use the {@link TailCall} interface to calculate the
- * Fibonacci sequence in a tail call optimized manner, avoiding deep recursion and
+ * Fibonacci sequence in a tail call optimised manner, avoiding deep recursion and
  * enhancing performance.
  */
 public class Fibonacci {
