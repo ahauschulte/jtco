@@ -1,8 +1,9 @@
 # jtco
 
 [![Java CI with Maven](https://github.com/ahauschulte/jtco/actions/workflows/maven.yml/badge.svg)](https://github.com/ahauschulte/jtco/actions/workflows/maven.yml)
-[![javadoc](https://javadoc.io/badge2/io.github.ahauschulte.jtco/jtco/javadoc.svg)](https://javadoc.io/doc/io.github.ahauschulte.jtco/jtco)
+[![CodeQL](https://github.com/ahauschulte/jtco/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/ahauschulte/jtco/actions/workflows/github-code-scanning/codeql)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.ahauschulte.jtco/jtco.svg)](https://central.sonatype.com/artifact/io.github.ahauschulte.jtco/jtco)
+[![javadoc](https://javadoc.io/badge2/io.github.ahauschulte.jtco/jtco/javadoc.svg)](https://javadoc.io/doc/io.github.ahauschulte.jtco/jtco)
 
 ## Overview
 
