@@ -23,11 +23,12 @@ import java.util.stream.Collectors;
  *         if (n == 0) {
  *             return TailCall.terminateWith(prevAcc); // @highlight substring="TailCall.terminateWith"
  *         } else {
- *             return TailCall.continueWith(() -> factorial(n - 1, prevAcc.multiply(BigInteger.valueOf(n)))); // @highlight substring="TailCall.continueWith"
+ *             return TailCall.continueWith(() -> factorial(n - 1, BigInteger.valueOf(n).multiply(prevAcc))); // @highlight substring="TailCall.continueWith"
  *         }
  *     }
  *
  *     private static BigInteger factorial(final int n) {
+ *         if (n < 0) throw new IllegalArgumentException("n must be >= 0");
  *         return factorial(n, BigInteger.ONE).evaluate(); // @highlight substring=".evaluate()"
  *     }
  *

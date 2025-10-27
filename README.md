@@ -1,17 +1,58 @@
-# jtco
+# jtco — Stack-Safe Tail Recursion for Java
+
+jtco lets you write tail-recursive code without risking a `StackOverflowError`.
+
+It emulates a form of tail-call optimisation using a simple implementation of the trampoline pattern — no bytecode
+tricks, no reflection, no additional runtime dependencies.
+
+---
 
 [![Java CI with Maven](https://github.com/ahauschulte/jtco/actions/workflows/maven.yml/badge.svg)](https://github.com/ahauschulte/jtco/actions/workflows/maven.yml)
 [![CodeQL](https://github.com/ahauschulte/jtco/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/ahauschulte/jtco/actions/workflows/github-code-scanning/codeql)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.ahauschulte.jtco/jtco.svg)](https://central.sonatype.com/artifact/io.github.ahauschulte.jtco/jtco)
-[![javadoc](https://javadoc.io/badge2/io.github.ahauschulte.jtco/jtco/javadoc.svg)](https://javadoc.io/doc/io.github.ahauschulte.jtco/jtco)
+[![JavaDoc](https://javadoc.io/badge2/io.github.ahauschulte.jtco/jtco/javadoc.svg)](https://javadoc.io/doc/io.github.ahauschulte.jtco/jtco)
+
+---
 
 ## Overview
 
-The jtco (Java Tail Call Optimisation) library provides a substitute for Java’s missing tail call optimisation
-capabilities. It implements a variant of the trampoline pattern to allow tail-recursive methods to execute without
-increasing the call stack size, thereby preventing stack overflow errors. By converting recursive calls into a loop
-that repeatedly invokes methods without adding new stack frames, jtco enables deeply recursive methods to run in
-constant stack space. jtco is implemented in plain Java 21 and has no runtime dependencies.
+The jtco library provides a substitute for Java’s missing tail call optimisation capabilities. It implements a variant
+of the trampoline pattern to allow tail-recursive methods to execute without increasing the call stack size, thereby
+preventing stack overflow errors. By converting recursive calls into a loop that repeatedly invokes methods without
+adding new stack frames, jtco enables deeply recursive methods to run in constant stack space. jtco is implemented in
+plain Java 21 and has no runtime dependencies.
+
+## Showcase
+
+Naive recursive implementation of factorial with linearly growing stack consumption:
+
+```java
+public static BigInteger factorial(final int n) {
+    if (n < 0) throw new IllegalArgumentException("n must be >= 0");
+    if (n <= 1) {
+        return BigInteger.ONE;
+    } else {
+        return BigInteger.valueOf(n).multiply(factorial(n - 1));
+    }
+}
+```
+
+Recursive implementation of factorial using jtco with constant stack consumption:
+
+```java
+private static TailCall<BigInteger> factorial(final int n, final BigInteger prevAcc) {
+    if (n < 0) throw new IllegalArgumentException("n must be >= 0");
+    if (n <= 1) {
+        return TailCall.terminateWith(prevAcc);
+    } else {
+        return TailCall.continueWith(() -> factorial(n - 1, BigInteger.valueOf(n).multiply(prevAcc)));
+    }
+}
+
+public static BigInteger factorialTco(final int n) {
+    return factorial(n, BigInteger.ONE).evaluate();
+}
+```
 
 ## Getting Started
 
@@ -23,6 +64,7 @@ page.
 #### Maven
 
 ```xml
+
 <dependency>
     <groupId>io.github.ahauschulte.jtco</groupId>
     <artifactId>jtco</artifactId>
@@ -65,17 +107,18 @@ This installs the library to your local Maven repository so it can be referenced
 
 ### Recursion
 
-A recursive method call is a method that calls itself within its own code. This technique is used to solve
+A recursive method is a method that calls itself within its own code. This technique is used to solve
 problems that can be broken down into smaller, similar subproblems. A recursive method typically has a base
 case that terminates the recursion and one or more recursive cases that reduce the problem's size and bring
 it closer to the base case. An example is the calculation of the factorial of a number.
 
 ```java
-public int factorial(final int n) {
+public static BigInteger factorial(final int n) {
+    if (n < 0) throw new IllegalArgumentException("n must be >= 0");
     if (n <= 1) { // Base case
-        return 1;
+        return BigInteger.ONE;
     } else { // Recursive case
-        return n * factorial(n - 1);
+        return BigInteger.valueOf(n).multiply(factorial(n - 1));
     }
 }
 ```
@@ -107,10 +150,11 @@ This is where tail call optimisation becomes beneficial.
 
 ### Tail Call Optimisation
 
-Tail Call Optimisation (TCO) is a sophisticated technique employed in many programming languages to enhance the
-performance of recursive methods. When a method makes a call to another method as its final action, it is termed a
-“tail call.” TCO transforms these tail calls into a more efficient form of execution, thereby preventing the
-accumulation of stack frames which typically occurs with standard recursive calls.
+Tail Call Optimisation (TCO) is a sophisticated technique employed in some compilers / programming languages to enhance
+the performance of recursive methods and eliminate unbounded stack consumption. When a method makes a call to another
+method as its final action, it is termed a “tail call.” TCO transforms these tail calls into a more efficient form of
+execution by replacing the existing stack frame, thereby preventing the accumulation of stack frames which typically
+occurs with standard recursive calls.
 
 At its core, TCO works by recognising that the current method’s stack frame is no longer needed after the tail call is
 made. Since the method has no further work to perform after the call returns, its stack frame can be safely discarded.
@@ -133,7 +177,7 @@ stack space.
 4. Memory Management: By maintaining a constant stack size, TCO leads to more predictable memory usage, which is
    crucial in resource-constrained environments, real-time systems, or for safety-critical applications.
 
-### Leveraging Tail Call Optimisation Techniques in Java 
+### Leveraging Tail Call Optimisation Techniques in Java
 
 Unfortunately, the common JVM implementations do not natively support TCO for various reasons. However, developers can
 employ certain techniques to simulate its benefits. One of those techniques is the so-called trampoline pattern. The
@@ -143,31 +187,39 @@ repeatedly invokes these method objects without growing the call stack.
 
 The introduction of lambdas in Java 8 significantly benefited the trampoline pattern by simplifying the code and
 enhancing readability. Lambdas allow for concise and expressive function definitions, making it easier to represent
-the recursive steps as a functional interface. This reduces boilerplate code and improves the overall clarity and
-maintainability of the trampoline implementation.
+the recursive steps as a functional interface. This reduces boilerplate code and enables developers to implement the
+trampoline pattern with clarity.
 
 The jtco library addresses the lack of native TCO in Java by offering an implementation of the trampoline pattern. It
-provides means that enables tail-recursive methods to be executed without increasing the call stack size, effectively
-preventing stack overflow errors. The API is designed with structure and simplicity in mind, promoting the creation of
-clean, readable, and maintainable client code. By utilising lambdas and functional programming constructs, jtco
-simplifies the creation of efficient and elegant recursive algorithms, allowing developers to leverage tail call
+provides mechanisms that enable tail-recursive methods to be executed without increasing the call stack size,
+effectively preventing stack overflow errors. The API is designed with structure and simplicity in mind, promoting the
+creation of clean, readable, and maintainable client code. By utilising lambdas and functional programming constructs,
+jtco simplifies the creation of efficient and elegant recursive algorithms, allowing developers to leverage tail call
 optimisation techniques within the Java ecosystem.
+
+### Limitations of Approaching TCO using the Trampoline Pattern
 
 While jtco brings a touch of tail call optimisation to Java, it is essential to understand the distinction between true
 TCO and the trampoline pattern. True TCO is a compiler-level optimisation that reuses the current method’s stack frame
 for tail calls, ensuring constant stack space and efficient execution. In contrast, the trampoline pattern simulates TCO
 by manually managing the execution flow through an iterative loop, invoking methods without growing the call stack. The
 trampoline pattern, while effective, is not completely equivalent to true TCO due to its additional overhead. It
-requires wrapping recursive calls in lambda expressions and repeatedly invoking them in a loop, which introduces runtime
-complexity and can result in slower performance compared to native TCO. True TCO is inherently more efficient, as it
+requires wrapping recursive calls in lambda expressions and repeatedly invoking them within a loop, which introduces
+runtime costs and results in slower performance compared to native TCO. True TCO is inherently more efficient, as it
 optimises at the compiler level without the need for such manual intervention.
+
+**In summary:** While jtco prevents stack overflows in deeply recursive code, it introduces a small, but noticeable
+runtime overhead compared to plain iteration and even naive recursion, primarily due to the creation of lambda objects
+to transform the recursion into an iterative execution. jtco therefore shines when recursion clarity combined with stack
+safety matters more than micro-level performance. If performance is critical, consider rewriting recursion as an
+explicit loop.
 
 ### Synchronous Method Interleaving
 
-The jtco library offers a straightforward way to implement synchronous method interleaving. This technique coordinates
-the execution of multiple recursive methods so that they advance incrementally together, rather than allowing one method
-to complete entirely before starting the next. This ensures balanced progression among tasks, which is essential in
-scenarios demanding fairness and balanced resource usage.
+The jtco library offers a limited, but straightforward way to implement synchronous method interleaving. This technique
+coordinates the execution of multiple recursive methods so that they advance incrementally together, rather than
+allowing one method to complete entirely before starting the next. This ensures balanced progression among tasks, which
+is essential in scenarios demanding fairness and balanced resource usage.
 
 #### Key Characteristics of Synchronous Method Interleaving
 
@@ -214,11 +266,10 @@ public class Factorial {
      * @return a {@code TailCall} representing the next step in the tail call chain
      */
     private static TailCall<BigInteger> factorial(final int n, final BigInteger prevAcc) {
-        if (n == 0) {
+        if (n <= 1) {
             return TailCall.terminateWith(prevAcc);
         } else {
-            final BigInteger nextAcc = BigInteger.valueOf(n).multiply(prevAcc);
-            return TailCall.continueWith(() -> factorial(n - 1, nextAcc));
+            return TailCall.continueWith(() -> factorial(n - 1, BigInteger.valueOf(n).multiply(prevAcc)));
         }
     }
 
@@ -232,6 +283,7 @@ public class Factorial {
      * @return the factorial of the given number as a {@code BigInteger}
      */
     private static BigInteger factorial(final int n) {
+        if (n < 0) throw new IllegalArgumentException("n must be >= 0");
         return factorial(n, BigInteger.ONE).evaluate();
     }
 
@@ -289,6 +341,7 @@ public class Fibonacci {
      * @return the Fibonacci number at the given position as a {@code BigInteger}
      */
     private static BigInteger fibonacci(final int n) {
+        if (n < 0) throw new IllegalArgumentException("n must be >= 0");
         return fibonacci(n, BigInteger.ZERO, BigInteger.ONE).evaluate();
     }
 
@@ -398,3 +451,7 @@ the JavaDoc for the library.
 
 This project utilises AI tools, specifically ChatGPT by OpenAI, to assist with documentation. All AI-generated content
 has been reviewed and validated by human contributors to ensure accuracy and quality.
+
+## Related Topics
+
+Java tail recursion, trampoline pattern, tail call optimisation on the JVM, stack overflow prevention
