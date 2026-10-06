@@ -219,24 +219,28 @@ explicit loop.
 The jtco library offers a structured way to implement synchronous method interleaving via the universal `TailStep` contract. This technique
 coordinates the execution of multiple recursive methods so that they advance incrementally together, rather than
 allowing one method to complete entirely before starting the next. This ensures balanced progression among tasks, which
-is essential in scenarios demanding fairness and balanced resource usage.
+is essential in scenarios demanding cooperative multitasking, fairness, and balanced resource usage.
 
-With `TailStep.interleave(List)`, you can interleave any combination of generic `TailCall<T>` instances and unboxed primitive tail calls (like `IntTailCall` or `LongTailCall`) concurrently in lockstep without intermediate stream allocations.
+`jtco` provides two distinct interleaving semantics:
+
+1. **`interleaveAll(List)`**:
+   - Continues evaluating steps until **every single task** has reached its terminal step.
+   - When tasks have unequal lengths (different step counts), completed tasks stay parked in their terminal state while remaining active tasks continue advancing round-robin.
+   - Returns a typed `List` of terminal steps (e.g. `List<TailCall<?>>`, `List<IntTailCall>`, or `List<TailStep>`), allowing you to directly inspect or evaluate the final results of all branches.
+
+2. **`interleaveAny(List)`** (aliased as `interleave(List)`):
+   - Advances tasks in unison until **at least one** task reaches its terminal step, then stops immediately.
+   - Ideal for scenarios like cooperative racing, producer-consumer pipelines that depend on an active source, or early termination.
+
+With `TailStep.interleaveAll(List)`, you can also mix any combination of generic `TailCall<T>` instances and unboxed primitive tail calls (`IntTailCall`, `LongTailCall`, etc.) in the same interleaving session without stream or intermediate collection allocations.
 
 #### Key Characteristics of Synchronous Method Interleaving
 
-1. Step-by-Step Advancement: Each recursive method progresses one step at a time in a coordinated fashion.
-2. Fair Resource Usage: Ensures that all tasks are given equal opportunity to make progress, avoiding scenarios where
-   one task monopolizes the resources.
-3. Avoiding Stack Overflow: By using TCO, synchronous method interleaving helps prevent stack overflow errors,
-   even with deep recursion.
-4. Universal Polymorphism: Mix any combination of generic objects and primitive tail calls in the same interleaving session.
-
-While jtco’s approach to synchronous method interleaving is suitable for many scenarios, there may be instances where
-its API lacks the necessary flexibility. There is an inherent tension between providing maximal flexibility and jtco’s
-design goals of maintaining a structured, simple, and robust API. In situations where jtco’s capabilities prove too
-restrictive, it is advisable to employ a tailored implementation of the trampoline pattern to achieve the desired
-flexibility and control.
+1. **Step-by-Step Advancement**: Each recursive method progresses one step at a time in a coordinated fashion.
+2. **Support for Unequal Lengths**: Tasks with varying execution lengths are fully supported by `interleaveAll`, gracefully handling branches that terminate at different intervals.
+3. **Fair Resource Usage**: Ensures that all tasks are given equal opportunity to make progress, avoiding scenarios where one task monopolizes CPU cycles.
+4. **Zero Stack Growth**: By evaluating through the trampoline loop, synchronous method interleaving prevents stack overflow errors regardless of recursion depth.
+5. **Universal Polymorphism**: Mix any combination of generic objects and primitive tail calls in the same interleaving session.
 
 ## Examples
 
@@ -485,7 +489,7 @@ public class IntSumDemo {
 #### Key Advantages:
 1. **Zero Heap Allocation for Return Values**: `eval()` directly returns the primitive type.
 2. **Opt-in Boxed Interoperability**: Call `.boxed()` to obtain a lazy `TailCall<BoxedType>` adapter whenever passing into generic code.
-3. **Universal Interleaving**: `TailStep.interleave(...)` allows concurrent step progressions across any combination of generic and primitive tail calls without stream or lambda allocations.
+3. **Universal Interleaving**: `interleaveAll(...)` and `interleaveAny(...)` allow concurrent step progressions across any combination of generic and primitive tail calls, gracefully supporting unequal step counts without intermediate allocations.
 4. **Ergonomic Aliases**: Use concise `done(...)` and `call(...)` alongside `terminateWith(...)` and `continueWith(...)`.
 5. **Modern Java 21**: Designed with Java 21 sealed hierarchies, records for steps, and the JPMS module system (`io.github.ahauschulte.jtco`).
 

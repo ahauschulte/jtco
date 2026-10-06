@@ -100,14 +100,46 @@ public sealed interface IntTailCall extends TailStep permits IntTailCall.Termina
     }
 
     /**
+     * Interleaves multiple tail calls, iteratively advancing active tail calls until <b>all</b> tail calls
+     * have reached their terminal step without boxing.
+     *
+     * <p>When a tail call reaches its terminal step earlier than others, it remains in its completed state
+     * without further advancement, while the remaining non-terminal tail calls continue advancing until
+     * every branch has completed.
+     *
+     * @param tailCallSuppliers the list of tail call suppliers to advance to completion
+     * @return a list containing the final terminal {@link IntTailCall} instances for each supplier
+     * @throws NullPointerException if {@code tailCallSuppliers} is {@code null}, any element is {@code null},
+     *                              or any supplier produces {@code null}
+     */
+    @SuppressWarnings("unchecked")
+    static List<IntTailCall> interleaveAll(final List<? extends Supplier<IntTailCall>> tailCallSuppliers) {
+        return (List<IntTailCall>) (List<?>) TailStep.interleaveAll(tailCallSuppliers);
+    }
+
+    /**
+     * Interleaves multiple tail calls, advancing them in unison until <b>at least one</b> reaches its terminal step.
+     *
+     * @param tailCallSuppliers the list of tail call suppliers to interleave
+     * @throws NullPointerException if {@code tailCallSuppliers} is {@code null}, any element is {@code null},
+     *                              or any supplier produces {@code null}
+     */
+    static void interleaveAny(final List<? extends Supplier<IntTailCall>> tailCallSuppliers) {
+        TailStep.interleaveAny(tailCallSuppliers);
+    }
+
+    /**
      * Interleaves tail calls, iteratively advancing all supplied tail calls together without boxing.
+     *
+     * <p>This method is an alias for {@link #interleaveAny(List)}. If you wish to advance all tail calls to their
+     * individual completion regardless of unequal step counts, use {@link #interleaveAll(List)}.
      *
      * @param tailCallSuppliers a list of {@link Supplier} objects that provide {@link IntTailCall} instances
      * @throws NullPointerException if {@code tailCallSuppliers} is {@code null}, any of its elements is {@code null},
      *                              or if a tail call supplier returns {@code null}
      */
-    static void interleave(final List<Supplier<IntTailCall>> tailCallSuppliers) {
-        TailStep.interleave(tailCallSuppliers);
+    static void interleave(final List<? extends Supplier<IntTailCall>> tailCallSuppliers) {
+        interleaveAny(tailCallSuppliers);
     }
 
     /**

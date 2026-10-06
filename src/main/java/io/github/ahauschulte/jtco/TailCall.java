@@ -98,17 +98,45 @@ public sealed interface TailCall<T> extends TailStep permits TailCallContinuatio
     }
 
     /**
+     * Interleaves multiple tail calls, iteratively advancing active tail calls until <b>all</b> tail calls
+     * have reached their terminal step.
+     *
+     * <p>When a tail call reaches its terminal step earlier than others, it remains in its completed state
+     * without further advancement, while the remaining non-terminal tail calls continue advancing until
+     * every branch has completed.
+     *
+     * @param tailCallSuppliers the list of tail call suppliers to advance to completion
+     * @return a list containing the final terminal {@link TailCall} instances for each supplier
+     * @throws NullPointerException if {@code tailCallSuppliers} is {@code null}, any element is {@code null},
+     *                              or any supplier produces {@code null}
+     */
+    @SuppressWarnings("unchecked")
+    static List<TailCall<?>> interleaveAll(final List<? extends Supplier<? extends TailCall<?>>> tailCallSuppliers) {
+        return (List<TailCall<?>>) (List<?>) TailStep.interleaveAll(tailCallSuppliers);
+    }
+
+    /**
+     * Interleaves multiple tail calls, advancing them in unison until <b>at least one</b> reaches its terminal step.
+     *
+     * @param tailCallSuppliers the list of tail call suppliers to interleave
+     * @throws NullPointerException if {@code tailCallSuppliers} is {@code null}, any element is {@code null},
+     *                              or any supplier produces {@code null}
+     */
+    static void interleaveAny(final List<? extends Supplier<? extends TailCall<?>>> tailCallSuppliers) {
+        TailStep.interleaveAny(tailCallSuppliers);
+    }
+
+    /**
      * Interleaves tail calls, iteratively advancing all supplied tail calls together.
      *
-     * <p>This method processes a list of suppliers that produce tail calls, advancing them in unison. It repeatedly
-     * checks if all tail calls in the list can continue and, if so, advances each tail call to its next step. The
-     * iteration stops when at least one tail call cannot proceed further because its terminal step has already been reached.
+     * <p>This method is an alias for {@link #interleaveAny(List)}. If you wish to advance all tail calls to their
+     * individual completion regardless of unequal step counts, use {@link #interleaveAll(List)}.
      *
      * @param tailCallSuppliers a list of {@link Supplier} objects that provide {@link TailCall} instances
      * @throws NullPointerException if {@code tailCallSuppliers} is {@code null}, any of its elements is {@code null},
      *                              or if a tail call supplier returns {@code null}.
      */
-    static void interleave(final List<Supplier<TailCall<?>>> tailCallSuppliers) {
-        TailStep.interleave(tailCallSuppliers);
+    static void interleave(final List<? extends Supplier<? extends TailCall<?>>> tailCallSuppliers) {
+        interleaveAny(tailCallSuppliers);
     }
 }

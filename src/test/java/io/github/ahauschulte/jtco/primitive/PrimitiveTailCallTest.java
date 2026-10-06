@@ -116,6 +116,45 @@ class PrimitiveTailCallTest {
             assertThat(stepsA.get()).isEqualTo(1);
             assertThat(stepsB.get()).isEqualTo(1);
         }
+
+        @Test
+        void testInterleaveAllWithUnequalSteps() {
+            final Supplier<IntTailCall> shortTask = () ->
+                    IntTailCall.call(() -> IntTailCall.done(10)); // 2 steps
+
+            final Supplier<IntTailCall> mediumTask = () ->
+                    IntTailCall.call(() ->
+                            IntTailCall.call(() ->
+                                    IntTailCall.call(() ->
+                                            IntTailCall.call(() -> IntTailCall.done(25))))); // 5 steps
+
+            final Supplier<IntTailCall> immediateTask = () -> IntTailCall.done(42); // 1 step
+
+            final List<IntTailCall> results = IntTailCall.interleaveAll(List.of(shortTask, mediumTask, immediateTask));
+
+            assertThat(results).hasSize(3);
+            assertThat(results.get(0).isTerminal()).isTrue();
+            assertThat(results.get(0).eval()).isEqualTo(10);
+
+            assertThat(results.get(1).isTerminal()).isTrue();
+            assertThat(results.get(1).eval()).isEqualTo(25);
+
+            assertThat(results.get(2).isTerminal()).isTrue();
+            assertThat(results.get(2).eval()).isEqualTo(42);
+        }
+
+        @Test
+        void testInterleaveAnyStopsOnFirstTerminal() {
+            final AtomicInteger secondaryStepped = new AtomicInteger();
+            final Supplier<IntTailCall> fastTask = () -> IntTailCall.done(1);
+            final Supplier<IntTailCall> slowTask = () -> IntTailCall.call(() -> {
+                secondaryStepped.incrementAndGet();
+                return IntTailCall.done(2);
+            });
+
+            IntTailCall.interleaveAny(List.of(fastTask, slowTask));
+            assertThat(secondaryStepped.get()).isZero();
+        }
     }
 
     @Nested
@@ -478,6 +517,34 @@ class PrimitiveTailCallTest {
             final List<Supplier<TailStep>> suppliers = List.of(() -> null);
             assertThatNullPointerException()
                     .isThrownBy(() -> TailStep.interleave(suppliers));
+        }
+
+        @Test
+        void testTailStepInterleaveAllMixedUnequalSteps() {
+            final Supplier<IntTailCall> intTask = () ->
+                    IntTailCall.call(() ->
+                            IntTailCall.call(() -> IntTailCall.done(111))); // 3 steps
+
+            final Supplier<TailCall<String>> genericTask = () ->
+                    TailCall.call(() -> TailCall.done("finished")); // 2 steps
+
+            final Supplier<DoubleTailCall> doubleTask = () ->
+                    DoubleTailCall.done(3.14159); // 1 step
+
+            final List<Supplier<? extends TailStep>> mixed = List.of(intTask, genericTask, doubleTask);
+            final List<TailStep> results = TailStep.interleaveAll(mixed);
+
+            assertThat(results).hasSize(3);
+            assertThat(results.get(0).isTerminal()).isTrue();
+            assertThat(((IntTailCall) results.get(0)).eval()).isEqualTo(111);
+
+            assertThat(results.get(1).isTerminal()).isTrue();
+            @SuppressWarnings("unchecked")
+            final TailCall<String> tc = (TailCall<String>) results.get(1);
+            assertThat(tc.evaluate()).isEqualTo("finished");
+
+            assertThat(results.get(2).isTerminal()).isTrue();
+            assertThat(((DoubleTailCall) results.get(2)).eval()).isEqualTo(3.14159);
         }
     }
 }

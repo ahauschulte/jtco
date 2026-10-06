@@ -59,6 +59,8 @@ build/
 
 ### VS Code ###
 .vscode/
+.gradle/
+build.gradle
 
 ### Mac OS ###
 .DS_Store
