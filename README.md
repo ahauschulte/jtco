@@ -216,10 +216,12 @@ explicit loop.
 
 ### Synchronous Method Interleaving
 
-The jtco library offers a limited, but straightforward way to implement synchronous method interleaving. This technique
+The jtco library offers a structured way to implement synchronous method interleaving via the universal `TailStep` contract. This technique
 coordinates the execution of multiple recursive methods so that they advance incrementally together, rather than
 allowing one method to complete entirely before starting the next. This ensures balanced progression among tasks, which
 is essential in scenarios demanding fairness and balanced resource usage.
+
+With `TailStep.interleave(List)`, you can interleave any combination of generic `TailCall<T>` instances and unboxed primitive tail calls (like `IntTailCall` or `LongTailCall`) concurrently in lockstep without intermediate stream allocations.
 
 #### Key Characteristics of Synchronous Method Interleaving
 
@@ -228,6 +230,7 @@ is essential in scenarios demanding fairness and balanced resource usage.
    one task monopolizes the resources.
 3. Avoiding Stack Overflow: By using TCO, synchronous method interleaving helps prevent stack overflow errors,
    even with deep recursion.
+4. Universal Polymorphism: Mix any combination of generic objects and primitive tail calls in the same interleaving session.
 
 While jtco’s approach to synchronous method interleaving is suitable for many scenarios, there may be instances where
 its API lacks the necessary flexibility. There is an inherent tension between providing maximal flexibility and jtco’s
@@ -437,6 +440,54 @@ public class Interleaving {
     }
 }
 ```
+
+### Zero-Boxing Primitive Tail Calls
+
+Standard generic trampolines require boxing primitive values into wrapper objects (`int` to `Integer`, `long` to `Long`, etc.), which creates significant GC pressure in hot paths.
+
+`jtco` provides specialized tail call interfaces for all 8 Java primitive types in the `io.github.ahauschulte.jtco.primitive` package:
+
+| Primitive Type | Tail Call Interface | Unboxed Method | Opt-in Boxed Adapter |
+| :--- | :--- | :--- | :--- |
+| `boolean` | `BooleanTailCall` | `boolean eval()` | `boxed() -> TailCall<Boolean>` |
+| `byte` | `ByteTailCall` | `byte eval()` | `boxed() -> TailCall<Byte>` |
+| `short` | `ShortTailCall` | `short eval()` | `boxed() -> TailCall<Short>` |
+| `char` | `CharTailCall` | `char eval()` | `boxed() -> TailCall<Character>` |
+| `int` | `IntTailCall` | `int eval()` | `boxed() -> TailCall<Integer>` |
+| `long` | `LongTailCall` | `long eval()` | `boxed() -> TailCall<Long>` |
+| `float` | `FloatTailCall` | `float eval()` | `boxed() -> TailCall<Float>` |
+| `double` | `DoubleTailCall` | `double eval()` | `boxed() -> TailCall<Double>` |
+
+#### Example: Zero-Boxing Sum with `IntTailCall`
+
+```java
+import io.github.ahauschulte.jtco.primitive.IntTailCall;
+
+public class IntSumDemo {
+
+    private static IntTailCall sum(final int n, final int acc) {
+        if (n <= 0) {
+            return IntTailCall.done(acc); // alias for terminateWith
+        }
+        return IntTailCall.call(() -> sum(n - 1, acc + n)); // alias for continueWith
+    }
+
+    public static int computeSum(final int n) {
+        return sum(n, 0).eval(); // Returns raw int with zero boxing!
+    }
+
+    public static void main(final String[] args) {
+        System.out.println("Sum 1..100000: " + computeSum(100_000));
+    }
+}
+```
+
+#### Key Advantages:
+1. **Zero Heap Allocation for Return Values**: `eval()` directly returns the primitive type.
+2. **Opt-in Boxed Interoperability**: Call `.boxed()` to obtain a lazy `TailCall<BoxedType>` adapter whenever passing into generic code.
+3. **Universal Interleaving**: `TailStep.interleave(...)` allows concurrent step progressions across any combination of generic and primitive tail calls without stream or lambda allocations.
+4. **Ergonomic Aliases**: Use concise `done(...)` and `call(...)` alongside `terminateWith(...)` and `continueWith(...)`.
+5. **Modern Java 21**: Designed with Java 21 sealed hierarchies, records for steps, and the JPMS module system (`io.github.ahauschulte.jtco`).
 
 ## Motivation
 

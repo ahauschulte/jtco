@@ -3,7 +3,7 @@ package io.github.ahauschulte.jtco;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-final class TailCallContinuationStep<T> implements TailCall<T> {
+final class TailCallContinuationStep<T> implements TailCall<T>, ContinuationStep {
     private final Supplier<TailCall<T>> nextTailCallSupplier;
 
     TailCallContinuationStep(final Supplier<TailCall<T>> nextTailCallSupplier) {
@@ -21,7 +21,8 @@ final class TailCallContinuationStep<T> implements TailCall<T> {
         return tailCallStep.evaluate();
     }
 
-    TailCall<T> proceed() {
+    @Override
+    public TailCall<T> proceed() {
         return Objects.requireNonNull(nextTailCallSupplier.get(), "Tail call must not be null");
     }
 }

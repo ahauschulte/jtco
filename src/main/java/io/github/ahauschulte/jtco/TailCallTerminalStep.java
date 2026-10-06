@@ -1,6 +1,6 @@
 package io.github.ahauschulte.jtco;
 
-final class TailCallTerminalStep<T> implements TailCall<T> {
+final class TailCallTerminalStep<T> implements TailCall<T>, TerminalStep {
     private final T result;
 
     TailCallTerminalStep(final T result) {
