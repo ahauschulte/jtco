@@ -1,7 +1,11 @@
 package io.github.ahauschulte.jtco;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.Supplier;
 
 /**
@@ -113,5 +117,53 @@ public interface TailStep {
      */
     static void interleave(final List<? extends Supplier<? extends TailStep>> suppliers) {
         interleaveAny(suppliers);
+    }
+
+    /**
+     * Interleaves multiple tail calls asynchronously on the provided executor.
+     *
+     * <p>Submits all suppliers to an {@link InterleavingEngine} and runs them cooperatively, returning
+     * a future that resolves with the list of terminal steps in the original order once all tasks complete.
+     *
+     * @param suppliers the list of tail call suppliers
+     * @param executor  the executor to execute the interleaving loop on
+     * @return a {@link CompletableFuture} that resolves with the list of terminal steps in the original order
+     * @throws NullPointerException if {@code suppliers} or {@code executor} is {@code null}
+     */
+    static CompletableFuture<List<TailStep>> interleaveAsync(
+            final List<? extends Supplier<? extends TailStep>> suppliers,
+            final Executor executor
+    ) {
+        Objects.requireNonNull(suppliers, "suppliers must not be null");
+        Objects.requireNonNull(executor, "executor must not be null");
+        if (suppliers.isEmpty()) return CompletableFuture.completedFuture(List.of());
+
+        final InterleavingEngine engine = InterleavingEngine.create();
+        final List<CompletableFuture<TailStep>> futures = new ArrayList<>(suppliers.size());
+        for (final Supplier<? extends TailStep> s : suppliers) {
+            futures.add(engine.submitStep(s));
+        }
+
+        final CompletableFuture<Void> runFuture = engine.runAsync(executor);
+        return runFuture.thenApply(v -> {
+            final List<TailStep> results = new ArrayList<>(futures.size());
+            for (final CompletableFuture<TailStep> f : futures) {
+                results.add(f.join());
+            }
+            return List.copyOf(results);
+        });
+    }
+
+    /**
+     * Interleaves multiple tail calls asynchronously using {@link ForkJoinPool#commonPool()}.
+     *
+     * @param suppliers the list of tail call suppliers
+     * @return a {@link CompletableFuture} that resolves with the list of terminal steps in the original order
+     * @throws NullPointerException if {@code suppliers} is {@code null}
+     */
+    static CompletableFuture<List<TailStep>> interleaveAsync(
+            final List<? extends Supplier<? extends TailStep>> suppliers
+    ) {
+        return interleaveAsync(suppliers, ForkJoinPool.commonPool());
     }
 }

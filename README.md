@@ -242,6 +242,60 @@ With `TailStep.interleaveAll(List)`, you can also mix any combination of generic
 4. **Zero Stack Growth**: By evaluating through the trampoline loop, synchronous method interleaving prevents stack overflow errors regardless of recursion depth.
 5. **Universal Polymorphism**: Mix any combination of generic objects and primitive tail calls in the same interleaving session.
 
+### Asynchronous Execution & `InterleavingEngine`
+
+For advanced cooperative multitasking and non-blocking applications, `jtco` provides first-class support for `CompletableFuture` and the thread-safe `InterleavingEngine`.
+
+#### 1. Direct `CompletableFuture` Evaluation
+
+Any `TailCall<T>` or unboxed primitive tail call can be evaluated asynchronously without blocking the calling thread:
+
+```java
+// Evaluate asynchronously on ForkJoinPool.commonPool() or a custom Executor
+CompletableFuture<BigInteger> future = factorial(10_000, BigInteger.ONE).evaluateAsync();
+future.thenAccept(result -> System.out.println("Result: " + result));
+
+// Primitive tail calls:
+CompletableFuture<Integer> intFuture = sum(10_000, 0).evalAsync();
+```
+
+#### 2. Dynamic Time-Sharing with `InterleavingEngine`
+
+The `InterleavingEngine` coordinates tail call execution with thread-safe dynamic task submission, cooperative cancellation, fault isolation, and individual task completion:
+
+```java
+InterleavingEngine engine = InterleavingEngine.create();
+
+// 1. Submit tasks dynamically — each returns an individual CompletableFuture:
+CompletableFuture<String> fFast = engine.submit(() -> fastTask(2));
+CompletableFuture<Integer> fSlow = engine.submitInt(() -> slowTask(100));
+
+// 2. Early resolution: fFast completes as soon as its 2 steps finish,
+// without waiting for fSlow to finish its 100 steps!
+fFast.thenAccept(fastResult -> System.out.println("Fast finished first: " + fastResult));
+
+// 3. Dynamic spawner: tasks can dynamically submit child tasks during execution:
+engine.submit(() -> TailCall.call(() -> {
+    engine.submitInt(() -> childTask());
+    return TailCall.done("parent complete");
+}));
+
+// 4. Execution modes:
+// Option A: Drain on current thread
+engine.runAll();
+
+// Option B: Tick-based stepping (ideal for game loops or time-budgeted dispatchers)
+int activeStepped = engine.step(); // runs 1 round-robin step across all active tasks
+engine.step(10); // runs up to 10 rounds
+
+// Option C: Run asynchronously in background / virtual threads
+CompletableFuture<Void> allDone = engine.runAsync(executor);
+```
+
+#### Fault Isolation & Cancellation:
+- **Fault Isolation**: If a task throws an uncaught exception, its individual `CompletableFuture` completes exceptionally (`completeExceptionally(cause)`), while all concurrent healthy tasks continue executing safely.
+- **Cooperative Cancellation**: Calling `future.cancel(true)` on any task's future signals the engine to remove it on the next step cycle without further evaluation.
+
 ## Examples
 
 ### Factorial

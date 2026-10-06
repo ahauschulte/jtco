@@ -7,6 +7,9 @@ import io.github.ahauschulte.jtco.TerminalStep;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.Supplier;
 
 /**
@@ -45,6 +48,27 @@ public sealed interface LongTailCall extends TailStep permits LongTailCall.Termi
      * @throws NullPointerException if a {@code TailCall} in the tail call chain is {@code null}
      */
     long eval();
+
+    /**
+     * Asynchronously evaluates this unboxed tail call on the common {@link ForkJoinPool}.
+     *
+     * @return a {@link CompletableFuture} containing the evaluated {@link Long} result
+     */
+    default CompletableFuture<Long> evalAsync() {
+        return evalAsync(ForkJoinPool.commonPool());
+    }
+
+    /**
+     * Asynchronously evaluates this unboxed tail call using the specified executor.
+     *
+     * @param executor the executor to run the evaluation on
+     * @return a {@link CompletableFuture} containing the evaluated {@link Long} result
+     * @throws NullPointerException if {@code executor} is {@code null}
+     */
+    default CompletableFuture<Long> evalAsync(final Executor executor) {
+        Objects.requireNonNull(executor, "executor must not be null");
+        return CompletableFuture.supplyAsync(this::eval, executor);
+    }
 
     /**
      * Adapts this unboxed tail call into a boxed {@link TailCall} of {@link Long}.
@@ -140,6 +164,35 @@ public sealed interface LongTailCall extends TailStep permits LongTailCall.Termi
      */
     static void interleave(final List<? extends Supplier<LongTailCall>> tailCallSuppliers) {
         interleaveAny(tailCallSuppliers);
+    }
+
+    /**
+     * Interleaves multiple tail calls asynchronously on the provided executor.
+     *
+     * @param tailCallSuppliers the list of tail call suppliers
+     * @param executor          the executor to execute the interleaving loop on
+     * @return a {@link CompletableFuture} that resolves with the list of terminal tail calls once all complete
+     * @throws NullPointerException if {@code tailCallSuppliers} or {@code executor} is {@code null}
+     */
+    @SuppressWarnings("unchecked")
+    static CompletableFuture<List<LongTailCall>> interleaveAsync(
+            final List<? extends Supplier<LongTailCall>> tailCallSuppliers,
+            final Executor executor
+    ) {
+        return (CompletableFuture<List<LongTailCall>>) (CompletableFuture<?>) TailStep.interleaveAsync(tailCallSuppliers, executor);
+    }
+
+    /**
+     * Interleaves multiple tail calls asynchronously using {@link ForkJoinPool#commonPool()}.
+     *
+     * @param tailCallSuppliers the list of tail call suppliers
+     * @return a {@link CompletableFuture} that resolves with the list of terminal tail calls once all complete
+     * @throws NullPointerException if {@code tailCallSuppliers} is {@code null}
+     */
+    static CompletableFuture<List<LongTailCall>> interleaveAsync(
+            final List<? extends Supplier<LongTailCall>> tailCallSuppliers
+    ) {
+        return interleaveAsync(tailCallSuppliers, ForkJoinPool.commonPool());
     }
 
     /**
